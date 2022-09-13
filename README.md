@@ -1,8 +1,10 @@
 **RPG GAME**
 
-It's my own rpg game
+Simple RPG Game
 
 ***
 
-**Devs :**
-- @miloszlip69
+***Classes :***
+- Knight
+- Archer
+- Bard
