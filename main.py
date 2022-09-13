@@ -2,6 +2,14 @@ import pygame
 
 pygame.init()
 
+# Colors
+
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -10,7 +18,7 @@ class Player(pygame.sprite.Sprite):
         self.speedx = None
         self.speedy = None
         self.image = pygame.Surface([50, 50])
-        self.image.fill((0, 0, 0))
+        self.image.fill(BLACK)
 
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT / 2)
@@ -58,7 +66,7 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
-    screen.fill((255, 255, 255))
+    screen.fill(WHITE)
     all_sprites.draw(screen)
     all_sprites.update()
 
