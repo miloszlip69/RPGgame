@@ -1,6 +1,8 @@
 import pygame
+import os
 
 pygame.init()
+img_dir = os.path.join(os.path.dirname(__file__), 'img')
 
 # Colors
 
@@ -15,11 +17,15 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
+        self.rot_image = None
+        self.rot_image_rect = None
         self.speedx = None
         self.speedy = None
-        self.image = pygame.Surface([50, 50])
-        self.image.fill(BLACK)
 
+        self.image = player_img[0]
+        self.image.set_colorkey(BLACK)
+
+        self.angle = None
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT / 2)
 
@@ -28,13 +34,13 @@ class Player(pygame.sprite.Sprite):
         self.speedy = 0
 
         keystate = pygame.key.get_pressed()
-        if keystate[pygame.K_LEFT]:
+        if keystate[pygame.K_a]:
             self.speedx = -8
-        if keystate[pygame.K_RIGHT]:
+        if keystate[pygame.K_d]:
             self.speedx = 8
-        if keystate[pygame.K_UP]:
+        if keystate[pygame.K_w]:
             self.speedy = -8
-        if keystate[pygame.K_DOWN]:
+        if keystate[pygame.K_s]:
             self.speedy = 8
 
         self.rect.x += self.speedx
@@ -54,8 +60,13 @@ WIDTH = 1000
 HEIGHT = 800
 
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
+pygame.display.set_caption("RPG Game")
 run = True
 clock = pygame.time.Clock()
+
+# Img's
+
+player_img = [pygame.image.load(os.path.join(img_dir, "pKnight.png")).convert()]
 
 all_sprites = pygame.sprite.Group(Player())
 
