@@ -11,6 +11,8 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+SKY_BLUE = (40, 100, 155)
 
 
 class Player(pygame.sprite.Sprite):
@@ -28,9 +30,10 @@ class Player(pygame.sprite.Sprite):
         self.angle = None
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT / 2)
-        self.rect.bottom = HEIGHT
 
     def update(self):
+        stamina.onUse = False
+
         self.speedx = 0
         if not self.speedy > 4:
             self.speedy += 1
@@ -43,6 +46,9 @@ class Player(pygame.sprite.Sprite):
         if keystate[pygame.K_SPACE] and self.onGround:
             self.speedy = -20
             self.onGround = False
+        if keystate[pygame.K_LSHIFT] and stamina.amount > 0:
+            stamina.onUse = True
+            self.speedx *= 3
 
         self.rect.x += self.speedx
         self.rect.y += self.speedy
@@ -63,7 +69,7 @@ class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
 
-        self.image = stone_img
+        self.image = blocks_img[0]
         self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
 
         self.rect = self.image.get_rect()
@@ -86,10 +92,41 @@ class Platform(pygame.sprite.Sprite):
                     player.rect.left = self.rect.right + 1
 
 
-WIDTH = 1000
-HEIGHT = 800
+class Stamina(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
 
-screen = pygame.display.set_mode([WIDTH, HEIGHT])
+        self.image = widgets[0]
+        self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
+        self.image.set_colorkey(BLACK)
+
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (50, 50)
+
+        self.onUse = False
+        self.amount = 100
+        self.maxAmount = 100
+
+        self.cooldown = 60
+
+    def update(self):
+        self.cooldown -= 1
+
+        if self.amount > 0:
+            pygame.draw.line(screen, YELLOW, [self.rect.right, self.rect.centery], [self.rect.right + self.amount, self.rect.centery], 6)
+        if self.onUse:
+            self.amount -= 1
+            self.cooldown = 60
+        elif self.cooldown < 0:
+            self.amount += 1
+        if self.amount > self.maxAmount:
+            self.amount = self.maxAmount
+
+
+WIDTH = 1920
+HEIGHT = 1080
+
+screen = pygame.display.set_mode([WIDTH, HEIGHT], pygame.FULLSCREEN)
 pygame.display.set_caption("RPG Game")
 run = True
 clock = pygame.time.Clock()
@@ -97,12 +134,16 @@ clock = pygame.time.Clock()
 # Img's
 
 player_img = [pygame.image.load(os.path.join(img_dir, "pKnight.png")).convert()]
-stone_img = pygame.image.load(os.path.join(img_dir, "stone.png")).convert()
+widgets = [pygame.image.load(os.path.join(img_dir, "stamina.png")).convert()]
+blocks_img = [pygame.image.load(os.path.join(img_dir, "grass.png")).convert(),
+              pygame.image.load(os.path.join(img_dir, "stone.png")).convert()]
 
 player = Player()
-all_sprites = pygame.sprite.Group(player)
-platforms = pygame.sprite.Group(Platform(200, HEIGHT - 50),
-                                Platform(350, HEIGHT - 120))
+stamina = Stamina()
+all_sprites = pygame.sprite.Group(player, stamina)
+platforms = pygame.sprite.Group()
+for i in range(128):
+    platforms.add(Platform(i * 32 - 16, HEIGHT - 16))
 
 while run:
     clock.tick(60)
@@ -111,7 +152,7 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
-    screen.fill(WHITE)
+    screen.fill(SKY_BLUE)
     all_sprites.draw(screen)
     platforms.draw(screen)
     platforms.update()
