@@ -1,6 +1,7 @@
 import pygame
 import math
 import os
+import random
 
 pygame.init()
 img_dir = os.path.join(os.path.dirname(__file__), 'img')
@@ -31,7 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH / 2, HEIGHT - 100)
+        self.rect.center = (WIDTH / 2, HEIGHT - 300)
 
     def update(self):
         stamina.onUse = False
@@ -75,6 +76,8 @@ class Player(pygame.sprite.Sprite):
 
         self.image = pygame.transform.scale(self.image, (14 * 4, 25 * 4))
         self.image.set_colorkey(BLACK)
+
+        print(self.speedx)
 
 
 class Sword(pygame.sprite.Sprite):
@@ -122,8 +125,7 @@ class Sword(pygame.sprite.Sprite):
                 self.onPlayer = True
 
 
-
-class Platform(pygame.sprite.Sprite):
+class Block(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
 
@@ -143,10 +145,10 @@ class Platform(pygame.sprite.Sprite):
                 player.speedy = 0
                 player.onGround = True
             else:
-                if self.rect.left < player.rect.right < self.rect.left + 7:
-                    player.rect.right = self.rect.left - 1
-                elif self.rect.right > player.rect.left > self.rect.right - 7:
-                    player.rect.left = self.rect.right + 1
+                if self.rect.left < player.rect.right < self.rect.left + 12:
+                    player.rect.right = self.rect.left
+                elif self.rect.right > player.rect.left > self.rect.right - 12:
+                    player.rect.left = self.rect.right
 
 
 class Stamina(pygame.sprite.Sprite):
@@ -181,6 +183,15 @@ class Stamina(pygame.sprite.Sprite):
             self.amount = self.maxAmount
 
 
+def worldGen():
+    for i in range(32):
+        blocks.add(Block(i * 32, HEIGHT - 16))
+        if random.randint(0, 4) == 4:
+            blocks.add(Block(i * 32, HEIGHT - 48))
+            blocks.add(Block(i * 32 + 32, HEIGHT - 48))
+            blocks.add(Block(i * 32 + 64, HEIGHT - 48))
+
+
 WIDTH = 1000
 HEIGHT = 600
 
@@ -200,9 +211,9 @@ player = Player()
 stamina = Stamina()
 sword = Sword()
 all_sprites = pygame.sprite.Group(player, sword, stamina)
-platforms = pygame.sprite.Group()
-for i in range(128):
-    platforms.add(Platform(i * 32 - 16, HEIGHT - 16))
+blocks = pygame.sprite.Group()
+worldGen()
+
 
 while run:
     clock.tick(60)
@@ -217,8 +228,8 @@ while run:
 
     screen.fill(SKY_BLUE)
     all_sprites.draw(screen)
-    platforms.draw(screen)
-    platforms.update()
+    blocks.draw(screen)
+    blocks.update()
     all_sprites.update()
     pygame.display.flip()
 pygame.quit()
