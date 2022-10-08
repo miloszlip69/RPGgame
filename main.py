@@ -34,7 +34,6 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = (WIDTH / 2, HEIGHT - 100)
 
     def update(self):
-
         stamina.onUse = False
 
         self.speedx = 0
@@ -82,6 +81,12 @@ class Sword(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
+        self.mouseC = []
+        self.angle = 0
+        self.dx = 0
+        self.dy = 0
+
+        self.onPlayer = True
         self.mouse_x = 0
         self.mouse_y = 0
 
@@ -90,18 +95,32 @@ class Sword(pygame.sprite.Sprite):
         self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH / 2, HEIGHT / 2)
+        self.rect.size = (32, 32)
+        self.rect.topleft = (WIDTH / 2, HEIGHT / 2)
 
     def update(self):
-        self.rect.center = player.rect.center
 
         self.mouse_x, self.mouse_y = pygame.mouse.get_pos()
-        rel_x, rel_y = self.mouse_x - self.rect.x, self.mouse_y - self.rect.y
-        angle = (180 / math.pi) * - math.atan2(rel_y, rel_x)
-        self.image = pygame.transform.rotate(sword_img, angle)
+        self.angle = math.atan2(self.mouse_y - self.rect.centery, self.mouse_x - self.rect.centerx)
+        self.mouseC = pygame.mouse.get_pressed()
 
-        self.image = pygame.transform.scale(self.image, (16 * 3, 16 * 3))
-        self.image.set_colorkey(BLACK)
+        if self.onPlayer:
+            if self.mouseC[0]:
+                self.onPlayer = False
+                self.dx = int(math.cos(self.angle) * 8)
+                self.dy = int(math.sin(self.angle) * 8)
+            self.image = pygame.transform.rotate(sword_img, (180 / math.pi) * - self.angle)
+            self.rect.center = player.rect.center
+            self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
+            self.image.set_colorkey(BLACK)
+
+        else:
+            if self.rect.top > 0 and self.rect.bottom < HEIGHT and self.rect.left > 0 and self.rect.right < WIDTH:
+                self.rect.x += self.dx
+                self.rect.y += self.dy
+            else:
+                self.onPlayer = True
+
 
 
 class Platform(pygame.sprite.Sprite):
@@ -115,7 +134,6 @@ class Platform(pygame.sprite.Sprite):
         self.rect.center = (x, y)
 
     def update(self):
-
         collide = self.rect.colliderect(player.rect)
         if collide:
             if player.speedy < 0:
@@ -176,8 +194,7 @@ clock = pygame.time.Clock()
 player_img = [pygame.image.load(os.path.join(img_dir, "pKnight.png")).convert()]
 widgets = [pygame.image.load(os.path.join(img_dir, "stamina.png")).convert()]
 sword_img = pygame.image.load(os.path.join(img_dir, "sword.png")).convert()
-blocks_img = [pygame.image.load(os.path.join(img_dir, "grass.png")).convert(),
-              pygame.image.load(os.path.join(img_dir, "stone.png")).convert()]
+blocks_img = [pygame.image.load(os.path.join(img_dir, "grass.png")).convert()]
 
 player = Player()
 stamina = Stamina()
@@ -203,6 +220,5 @@ while run:
     platforms.draw(screen)
     platforms.update()
     all_sprites.update()
-
     pygame.display.flip()
 pygame.quit()
