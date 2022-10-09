@@ -21,11 +21,6 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.speedx = 0
-        self.speedy = 0
-        self.rotation = "right"
-        self.flip = False
-        self.onGround = True
 
         self.image = player_img[0]
         self.image = pygame.transform.scale(self.image, (14 * 4, 25 * 4))
@@ -34,24 +29,33 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT - 300)
 
+        self.speedx = 0
+        self.speedy = 0
+        self.rotation = "right"
+        self.flip = False
+        self.onGround = True
+
+        self.keystate = None
+        self.stats_open = False
+
     def update(self):
         stamina.onUse = False
+        self.keystate = pygame.key.get_pressed()
 
         self.speedx = 0
         if not self.speedy > 5:
             self.speedy += 1
 
-        keystate = pygame.key.get_pressed()
-        if keystate[pygame.K_d]:
+        if self.keystate[pygame.K_d]:
             self.speedx = 6
             self.rotation = "right"
-        if keystate[pygame.K_a]:
+        if self.keystate[pygame.K_a]:
             self.speedx = -6
             self.rotation = "left"
-        if keystate[pygame.K_SPACE] and self.onGround:
+        if self.keystate[pygame.K_SPACE] and self.onGround:
             self.speedy = -20
             self.onGround = False
-        if keystate[pygame.K_LSHIFT] and stamina.amount > 0:
+        if self.keystate[pygame.K_LSHIFT] and stamina.amount > 0:
             stamina.onUse = True
             self.speedx *= 1.8
 
@@ -76,8 +80,10 @@ class Player(pygame.sprite.Sprite):
 
         self.image = pygame.transform.scale(self.image, (14 * 4, 25 * 4))
         self.image.set_colorkey(BLACK)
+        self.stats_screen()
 
-        print(self.speedx)
+    def stats_screen(self):
+        pass
 
 
 class Sword(pygame.sprite.Sprite):
@@ -118,6 +124,10 @@ class Sword(pygame.sprite.Sprite):
             self.image.set_colorkey(BLACK)
 
         else:
+            for i in blocks:
+                if self.rect.colliderect(i.rect):
+                    self.onPlayer = True
+                    i.kill()
             if self.rect.top > 0 and self.rect.bottom < HEIGHT and self.rect.left > 0 and self.rect.right < WIDTH:
                 self.rect.x += self.dx
                 self.rect.y += self.dy
@@ -183,7 +193,7 @@ class Stamina(pygame.sprite.Sprite):
             self.amount = self.maxAmount
 
 
-def worldGen():
+def world_gen():
     for i in range(32):
         blocks.add(Block(i * 32, HEIGHT - 16))
         if random.randint(0, 4) == 4:
@@ -212,8 +222,7 @@ stamina = Stamina()
 sword = Sword()
 all_sprites = pygame.sprite.Group(player, sword, stamina)
 blocks = pygame.sprite.Group()
-worldGen()
-
+world_gen()
 
 while run:
     clock.tick(60)
@@ -222,9 +231,12 @@ while run:
         if event.type == pygame.QUIT:
             run = False
         if event.type == pygame.KEYDOWN:
-
             if event.key == pygame.K_ESCAPE:
                 run = False
+
+        if event.type == pygame.KEYUP:
+            print(event.key)
+            print()
 
     screen.fill(SKY_BLUE)
     all_sprites.draw(screen)
