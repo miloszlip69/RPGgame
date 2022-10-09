@@ -6,7 +6,8 @@ Simple RPG Game
 
 ---
 
-## Classes :
- - Knight
- - Archer
- - Bard
+| Class          | Finished      |
+|----------------|---------------|
+| Knight         | [ ]           |
+| Archer         | [ ]           |
+| Bard           | [ ]           |
