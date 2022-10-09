@@ -6,8 +6,8 @@ Simple RPG Game
 
 ---
 
-| Class          | Finished      |
-|----------------|---------------|
-| Knight         | [ ]           |
-| Archer         | [ ]           |
-| Bard           | [ ]           |
+| Class          | Finished |
+|----------------|----------|
+| Knight         | :x:      |
+| Archer         | :x:      |
+| Bard           | :x:      |
