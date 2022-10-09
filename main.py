@@ -21,7 +21,6 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-
         self.image = player_img[0]
         self.image = pygame.transform.scale(self.image, (14 * 4, 25 * 4))
         self.image.set_colorkey(BLACK)
@@ -94,6 +93,7 @@ class Sword(pygame.sprite.Sprite):
         self.angle = 0
         self.dx = 0
         self.dy = 0
+        self.speed = 2
 
         self.onPlayer = True
         self.mouse_x = 0
@@ -108,31 +108,32 @@ class Sword(pygame.sprite.Sprite):
         self.rect.topleft = (WIDTH / 2, HEIGHT / 2)
 
     def update(self):
-
-        self.mouse_x, self.mouse_y = pygame.mouse.get_pos()
-        self.angle = math.atan2(self.mouse_y - self.rect.centery, self.mouse_x - self.rect.centerx)
         self.mouseC = pygame.mouse.get_pressed()
-
         if self.onPlayer:
-            if self.mouseC[0]:
-                self.onPlayer = False
-                self.dx = int(math.cos(self.angle) * 8)
-                self.dy = int(math.sin(self.angle) * 8)
-            self.image = pygame.transform.rotate(sword_img, (180 / math.pi) * - self.angle)
+            self.speed = 2
             self.rect.center = player.rect.center
+            self.angle = math.atan2(self.mouse_y - self.rect.centery, self.mouse_x - self.rect.centerx)
+            self.mouse_x, self.mouse_y = pygame.mouse.get_pos()
+            self.image = pygame.transform.rotate(sword_img, (180 / math.pi) * - self.angle)
             self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
             self.image.set_colorkey(BLACK)
+            if self.mouseC[0]:
+                self.onPlayer = False
 
         else:
-            for i in blocks:
-                if self.rect.colliderect(i.rect):
-                    self.onPlayer = True
-                    i.kill()
+            self.speed += 0.5
+            self.dx = int(math.cos(self.angle) * self.speed)
+            self.dy = int(math.sin(self.angle) * self.speed)
+
             if self.rect.top > 0 and self.rect.bottom < HEIGHT and self.rect.left > 0 and self.rect.right < WIDTH:
                 self.rect.x += self.dx
                 self.rect.y += self.dy
             else:
                 self.onPlayer = True
+            for i in blocks:
+                if self.rect.colliderect(i.rect):
+                    self.onPlayer = True
+                    i.kill()
 
 
 class Block(pygame.sprite.Sprite):
@@ -236,7 +237,6 @@ while run:
 
         if event.type == pygame.KEYUP:
             print(event.key)
-            print()
 
     screen.fill(SKY_BLUE)
     all_sprites.draw(screen)
