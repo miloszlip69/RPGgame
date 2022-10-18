@@ -12,8 +12,9 @@ Simple RPG Game
 | Archer         | :x:      |
 | Bard           | :x:      |
 
- | Block ID | Block Type |
-|----------|------------|
- | 0        | Grass      |
- | 1        | Stone      |
- | 2        | Lava       |
+ | Block ID | Block Type | Texture                                                                        |
+|----------|------------|--------------------------------------------------------------------------------|
+ | 0        | Grass      | ![](https://github.com/miloszlip69/RPGgame/blob/master/img/grass.png?raw=true) |
+ | 1        | Stone      | ![](https://github.com/miloszlip69/RPGgame/blob/master/img/stone.png?raw=true) |
+ | 2        | Magma      | ![](https://github.com/miloszlip69/RPGgame/blob/master/img/magma.png?raw=true) |
+ | 3        | Lava       | ![](https://github.com/miloszlip69/RPGgame/blob/master/img/lava.png?raw=true)  |
