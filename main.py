@@ -1,7 +1,6 @@
 import pygame
 import math
 import os
-import random
 
 pygame.init()
 img_dir = os.path.join(os.path.dirname(__file__), 'img')
@@ -14,7 +13,7 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
-SKY_BLUE = (40, 100, 155)
+HELL_COLOR = (80, 20, 20)
 
 
 class Player(pygame.sprite.Sprite):
@@ -27,13 +26,16 @@ class Player(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 2, HEIGHT - 300)
+        self.spawnPoint = (WIDTH / 2, HEIGHT - 300)
 
         self.speedx = 0
         self.speedy = 0
         self.rotation = "right"
         self.flip = False
         self.onGround = True
+        self.living = True
 
+        self.item = Sword()
         self.keystate = None
         self.stats_open = False
 
@@ -79,10 +81,14 @@ class Player(pygame.sprite.Sprite):
 
         self.image = pygame.transform.scale(self.image, (14 * 4, 25 * 4))
         self.image.set_colorkey(BLACK)
-        self.stats_screen()
+        if not self.living:
+            self.item = None
+        if self.item:
+            self.item.draw()
+            self.item.update()
 
-    def stats_screen(self):
-        pass
+    def die(self):
+        self.rect.center = self.spawnPoint
 
 
 class Sword(pygame.sprite.Sprite):
@@ -133,15 +139,21 @@ class Sword(pygame.sprite.Sprite):
             for i in blocks:
                 if self.rect.colliderect(i.rect):
                     self.onPlayer = True
-                    i.kill()
+                    i.destroy()
+
+    def draw(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
 
 
 class Block(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, unbreakable, BlockId):
         pygame.sprite.Sprite.__init__(self)
 
-        self.image = blocks_img[0]
+        self.unbreakable = unbreakable
+        self.image = blocks_img[BlockId]
         self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
+        self.image.set_colorkey(BLACK)
+        self.blockID = BlockId
 
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
@@ -149,6 +161,8 @@ class Block(pygame.sprite.Sprite):
     def update(self):
         collide = self.rect.colliderect(player.rect)
         if collide:
+            if self.blockID == 3:
+                player.die()
             if player.speedy < 0:
                 player.speedy = 3
             if self.rect.top + 7 > player.rect.bottom > self.rect.top:
@@ -160,6 +174,10 @@ class Block(pygame.sprite.Sprite):
                     player.rect.right = self.rect.left
                 elif self.rect.right > player.rect.left > self.rect.right - 12:
                     player.rect.left = self.rect.right
+
+    def destroy(self):
+        if not self.unbreakable:
+            self.kill()
 
 
 class Stamina(pygame.sprite.Sprite):
@@ -196,11 +214,12 @@ class Stamina(pygame.sprite.Sprite):
 
 def world_gen():
     for i in range(32):
-        blocks.add(Block(i * 32, HEIGHT - 16))
-        if random.randint(0, 4) == 4:
-            blocks.add(Block(i * 32, HEIGHT - 48))
-            blocks.add(Block(i * 32 + 32, HEIGHT - 48))
-            blocks.add(Block(i * 32 + 64, HEIGHT - 48))
+        blocks.add(Block(i * 32, HEIGHT - 16, True, 3))
+
+    for i in blocks:
+        if 600 > i.rect.x > 200:
+            blocks.remove(i)
+            blocks.add(Block(i.rect.centerx, i.rect.centery, False, 2))
 
 
 WIDTH = 1000
@@ -216,12 +235,14 @@ clock = pygame.time.Clock()
 player_img = [pygame.image.load(os.path.join(img_dir, "pKnight.png")).convert()]
 widgets = [pygame.image.load(os.path.join(img_dir, "stamina.png")).convert()]
 sword_img = pygame.image.load(os.path.join(img_dir, "sword.png")).convert()
-blocks_img = [pygame.image.load(os.path.join(img_dir, "grass.png")).convert()]
+blocks_img = [pygame.image.load(os.path.join(img_dir, "grass.png")).convert(),
+              pygame.image.load(os.path.join(img_dir, "stone.png")).convert(),
+              pygame.image.load(os.path.join(img_dir, "magma.png")).convert(),
+              pygame.image.load(os.path.join(img_dir, "lava.png")).convert()]
 
 player = Player()
 stamina = Stamina()
-sword = Sword()
-all_sprites = pygame.sprite.Group(player, sword, stamina)
+all_sprites = pygame.sprite.Group(player, stamina)
 blocks = pygame.sprite.Group()
 world_gen()
 
@@ -235,10 +256,7 @@ while run:
             if event.key == pygame.K_ESCAPE:
                 run = False
 
-        if event.type == pygame.KEYUP:
-            print(event.key)
-
-    screen.fill(SKY_BLUE)
+    screen.fill(HELL_COLOR)
     all_sprites.draw(screen)
     blocks.draw(screen)
     blocks.update()

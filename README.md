@@ -11,3 +11,9 @@ Simple RPG Game
 | Knight         | :x:      |
 | Archer         | :x:      |
 | Bard           | :x:      |
+
+ | Block ID | Block Type |
+|----------|------------|
+ | 0        | Grass      |
+ | 1        | Stone      |
+ | 2        | Lava       |
