@@ -1,3 +1,5 @@
+import random
+
 import pygame
 import math
 import os
@@ -25,11 +27,12 @@ class Player(pygame.sprite.Sprite):
         self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH / 2, HEIGHT - 300)
+        self.centerx = WIDTH / 2
+        self.rect.center = (self.centerx, HEIGHT - 300)
         self.spawnPoint = (WIDTH / 2, HEIGHT - 300)
-
         self.speedx = 0
         self.speedy = 0
+
         self.rotation = "right"
         self.flip = False
         self.onGround = True
@@ -47,10 +50,10 @@ class Player(pygame.sprite.Sprite):
         if not self.speedy > 5:
             self.speedy += 1
 
-        if self.keystate[pygame.K_d]:
+        if self.keystate[pygame.K_a]:
             self.speedx = 6
             self.rotation = "right"
-        if self.keystate[pygame.K_a]:
+        if self.keystate[pygame.K_d]:
             self.speedx = -6
             self.rotation = "left"
         if self.keystate[pygame.K_SPACE] and self.onGround:
@@ -60,7 +63,7 @@ class Player(pygame.sprite.Sprite):
             stamina.onUse = True
             self.speedx *= 1.8
 
-        self.rect.x += self.speedx
+        self.centerx += self.speedx
         self.rect.y += self.speedy
 
         if self.rect.right > WIDTH:
@@ -88,6 +91,7 @@ class Player(pygame.sprite.Sprite):
             self.item.update()
 
     def die(self):
+        self.centerx = WIDTH / 2
         self.rect.center = self.spawnPoint
 
 
@@ -150,15 +154,21 @@ class Block(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         self.unbreakable = unbreakable
-        self.image = blocks_img[BlockId]
-        self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
-        self.image.set_colorkey(BLACK)
         self.blockID = BlockId
+        self.image = blocks_img[self.blockID]
+
+        if self.blockID == 3:
+            self.image = pygame.transform.scale(self.image, (16 * 2, 13 * 2))
+        else:
+            self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
+        self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
+        self.centerx = x
+        self.rect.center = (self.centerx + player.rect.centerx - WIDTH / 2, y)
 
     def update(self):
+        self.rect.centerx = self.centerx + player.centerx - WIDTH / 2
         collide = self.rect.colliderect(player.rect)
         if collide:
             if self.blockID == 3:
@@ -213,13 +223,14 @@ class Stamina(pygame.sprite.Sprite):
 
 
 def world_gen():
-    for i in range(32):
-        blocks.add(Block(i * 32, HEIGHT - 16, True, 3))
+    for j in range(4096):
+        num = random.randint(1, 3)
 
-    for i in blocks:
-        if 600 > i.rect.x > 200:
-            blocks.remove(i)
-            blocks.add(Block(i.rect.centerx, i.rect.centery, False, 2))
+        for i in range(3):
+            if num == 1:
+                blocks.add(Block((j * 96 - ((i - 1) * 32) - WIDTH / 2), HEIGHT - 16, True, 3))
+            else:
+                blocks.add(Block((j * 96 - ((i - 1) * 32) - WIDTH / 2), HEIGHT - 16, False, 2))
 
 
 WIDTH = 1000
@@ -248,6 +259,7 @@ world_gen()
 
 while run:
     clock.tick(60)
+    print(clock)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
