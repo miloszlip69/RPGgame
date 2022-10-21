@@ -6,7 +6,7 @@ Simple RPG Game
 
 ---
 
-| Class          | Finished |
+| Class          | Finished |     
 |----------------|----------|
 | Knight         | :x:      |
 | Archer         | :x:      |
@@ -18,3 +18,5 @@ Simple RPG Game
  | 1        | Stone      | ![](https://github.com/miloszlip69/RPGgame/blob/master/img/stone.png?raw=true) |
  | 2        | Magma      | ![](https://github.com/miloszlip69/RPGgame/blob/master/img/magma.png?raw=true) |
  | 3        | Lava       | ![](https://github.com/miloszlip69/RPGgame/blob/master/img/lava.png?raw=true)  |
+
+jakaś zmiana do README.md
