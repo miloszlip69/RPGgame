@@ -17,12 +17,14 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 HELL_COLOR = (80, 20, 20)
 
+Font = pygame.font.SysFont('Noto Sans', 30)
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.image = player_img[0]
+        self.image = textures['player']['knight']
         self.image = pygame.transform.scale(self.image, (14 * 4, 25 * 4))
         self.image.set_colorkey(BLACK)
 
@@ -78,9 +80,9 @@ class Player(pygame.sprite.Sprite):
             self.rect.top = 0
 
         if self.rotation == "right":
-            self.image = player_img[0]
+            self.image = textures['player']['knight']
         elif self.rotation == "left":
-            self.image = pygame.transform.flip(player_img[0], True, False)
+            self.image = pygame.transform.flip(textures['player']['knight'], True, False)
 
         self.image = pygame.transform.scale(self.image, (14 * 4, 25 * 4))
         self.image.set_colorkey(BLACK)
@@ -109,7 +111,7 @@ class Sword(pygame.sprite.Sprite):
         self.mouse_x = 0
         self.mouse_y = 0
 
-        self.image = sword_img
+        self.image = textures['items']['sword']
         self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
         self.image.set_colorkey(BLACK)
 
@@ -124,7 +126,7 @@ class Sword(pygame.sprite.Sprite):
             self.rect.center = player.rect.center
             self.angle = math.atan2(self.mouse_y - self.rect.centery, self.mouse_x - self.rect.centerx)
             self.mouse_x, self.mouse_y = pygame.mouse.get_pos()
-            self.image = pygame.transform.rotate(sword_img, (180 / math.pi) * - self.angle)
+            self.image = pygame.transform.rotate(textures['items']['sword'], (180 / math.pi) * - self.angle)
             self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
             self.image.set_colorkey(BLACK)
             if self.mouseC[0]:
@@ -155,7 +157,7 @@ class Block(pygame.sprite.Sprite):
 
         self.unbreakable = unbreakable
         self.blockID = BlockId
-        self.image = blocks_img[self.blockID]
+        self.image = textures['blocks'][self.blockID]
 
         if self.blockID == 3:
             self.image = pygame.transform.scale(self.image, (16 * 2, 13 * 2))
@@ -169,6 +171,8 @@ class Block(pygame.sprite.Sprite):
 
     def update(self):
         self.rect.centerx = self.centerx + player.centerx - WIDTH / 2
+        if self.rect.left > - 32 and self.rect.right < WIDTH + 32:
+            self.draw()
         collide = self.rect.colliderect(player.rect)
         if collide:
             if self.blockID == 3:
@@ -185,6 +189,9 @@ class Block(pygame.sprite.Sprite):
                 elif self.rect.right > player.rect.left > self.rect.right - 12:
                     player.rect.left = self.rect.right
 
+    def draw(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
     def destroy(self):
         if not self.unbreakable:
             self.kill()
@@ -194,7 +201,7 @@ class Stamina(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.image = widgets[0]
+        self.image = textures['widgets']['stamina']
         self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
         self.image.set_colorkey(BLACK)
 
@@ -209,7 +216,6 @@ class Stamina(pygame.sprite.Sprite):
 
     def update(self):
         self.cooldown -= 1
-
         if self.amount > 0:
             pygame.draw.line(screen, YELLOW, [self.rect.right, self.rect.centery],
                              [self.rect.right + self.amount, self.rect.centery], 6)
@@ -223,14 +229,14 @@ class Stamina(pygame.sprite.Sprite):
 
 
 def world_gen():
-    for j in range(4096):
+    for j in range(4000):
         num = random.randint(1, 3)
 
         for i in range(3):
             if num == 1:
-                blocks.add(Block((j * 96 - ((i - 1) * 32) - WIDTH / 2), HEIGHT - 16, True, 3))
+                blocks.add(Block((j * 96 - ((i - 1) * 32) - 2000), HEIGHT - 16, True, 3))
             else:
-                blocks.add(Block((j * 96 - ((i - 1) * 32) - WIDTH / 2), HEIGHT - 16, False, 2))
+                blocks.add(Block((j * 96 - ((i - 1) * 32) - 2000), HEIGHT - 16, False, 2))
 
 
 WIDTH = 1000
@@ -242,14 +248,23 @@ run = True
 clock = pygame.time.Clock()
 
 # Img's
-
-player_img = [pygame.image.load(os.path.join(img_dir, "pKnight.png")).convert()]
-widgets = [pygame.image.load(os.path.join(img_dir, "stamina.png")).convert()]
-sword_img = pygame.image.load(os.path.join(img_dir, "sword.png")).convert()
-blocks_img = [pygame.image.load(os.path.join(img_dir, "grass.png")).convert(),
-              pygame.image.load(os.path.join(img_dir, "stone.png")).convert(),
-              pygame.image.load(os.path.join(img_dir, "magma.png")).convert(),
-              pygame.image.load(os.path.join(img_dir, "lava.png")).convert()]
+textures = {
+    'player': {
+        'knight': pygame.image.load(os.path.join(img_dir, "pKnight.png")).convert()
+    },
+    'items': {
+        'sword': pygame.image.load(os.path.join(img_dir, "sword.png")).convert()
+    },
+    'blocks': {
+        0 : pygame.image.load(os.path.join(img_dir, "grass.png")).convert(),
+        1 : pygame.image.load(os.path.join(img_dir, "stone.png")).convert(),
+        2 : pygame.image.load(os.path.join(img_dir, "magma.png")).convert(),
+        3 : pygame.image.load(os.path.join(img_dir, "lava.png")).convert()
+    },
+    'widgets': {
+        'stamina': pygame.image.load(os.path.join(img_dir, "stamina.png")).convert()
+    }
+}
 
 player = Player()
 stamina = Stamina()
@@ -259,7 +274,9 @@ world_gen()
 
 while run:
     clock.tick(60)
-    print(clock)
+
+    # Texts in loop
+    FpsT = Font.render("FPS : " + str(int(clock.get_fps())), False, WHITE)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -270,8 +287,8 @@ while run:
 
     screen.fill(HELL_COLOR)
     all_sprites.draw(screen)
-    blocks.draw(screen)
-    blocks.update()
+    screen.blit(FpsT, (WIDTH - 160, 40))
     all_sprites.update()
-    pygame.display.flip()
+    blocks.update()
+    pygame.display.update()
 pygame.quit()
