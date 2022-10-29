@@ -1,11 +1,11 @@
 import random
-
 import pygame
 import math
 import os
 
 pygame.init()
 img_dir = os.path.join(os.path.dirname(__file__), 'img')
+sfx_dir = os.path.join(os.path.dirname(__file__), 'sfx')
 
 # Colors
 
@@ -17,7 +17,7 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 HELL_COLOR = (80, 20, 20)
 
-Font = pygame.font.SysFont('Noto Sans', 30)
+Font = pygame.font.SysFont('Noto Sans', 10)
 
 
 class Player(pygame.sprite.Sprite):
@@ -47,21 +47,21 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         stamina.onUse = False
         self.keystate = pygame.key.get_pressed()
-
         self.speedx = 0
         if not self.speedy > 5:
             self.speedy += 1
 
-        if self.keystate[pygame.K_a]:
+        if keydown.__contains__(ord('a')):
             self.speedx = 6
             self.rotation = "right"
-        if self.keystate[pygame.K_d]:
+        if keydown.__contains__(ord('d')):
             self.speedx = -6
             self.rotation = "left"
-        if self.keystate[pygame.K_SPACE] and self.onGround:
+        if keydown.__contains__(32) and self.onGround:
+            pygame.mixer.Sound.play(sounds['player']['jump'])
             self.speedy = -20
             self.onGround = False
-        if self.keystate[pygame.K_LSHIFT] and stamina.amount > 0:
+        if keydown.__contains__(1073742049) and stamina.amount > 0:
             stamina.onUse = True
             self.speedx *= 1.8
 
@@ -158,16 +158,12 @@ class Block(pygame.sprite.Sprite):
         self.unbreakable = unbreakable
         self.blockID = BlockId
         self.image = textures['blocks'][self.blockID]
-
-        if self.blockID == 3:
-            self.image = pygame.transform.scale(self.image, (16 * 2, 13 * 2))
-        else:
-            self.image = pygame.transform.scale(self.image, (16 * 2, 16 * 2))
+        self.image = pygame.transform.scale(self.image, (16 * 2, self.image.get_rect().height * 2))
         self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()
         self.centerx = x
-        self.rect.center = (self.centerx + player.rect.centerx - WIDTH / 2, y)
+        self.rect.topleft = (self.centerx + player.rect.centerx - WIDTH / 2, y)
 
     def update(self):
         self.rect.centerx = self.centerx + player.centerx - WIDTH / 2
@@ -229,14 +225,14 @@ class Stamina(pygame.sprite.Sprite):
 
 
 def world_gen():
-    for j in range(4000):
+    for j in range(3500):
         num = random.randint(1, 3)
 
         for i in range(3):
             if num == 1:
-                blocks.add(Block((j * 96 - ((i - 1) * 32) - 2000), HEIGHT - 16, True, 3))
+                blocks.add(Block((j * 96 - ((i - 1) * 32) - 1500), HEIGHT - 16, True, 3))
             else:
-                blocks.add(Block((j * 96 - ((i - 1) * 32) - 2000), HEIGHT - 16, False, 2))
+                blocks.add(Block((j * 96 - ((i - 1) * 32) - 1500), HEIGHT - 16, False, 2))
 
 
 WIDTH = 1000
@@ -247,7 +243,7 @@ pygame.display.set_caption("RPG Game")
 run = True
 clock = pygame.time.Clock()
 
-# Img's
+# Img's and Sounds
 textures = {
     'player': {
         'knight': pygame.image.load(os.path.join(img_dir, "pKnight.png")).convert()
@@ -256,13 +252,20 @@ textures = {
         'sword': pygame.image.load(os.path.join(img_dir, "sword.png")).convert()
     },
     'blocks': {
-        0 : pygame.image.load(os.path.join(img_dir, "grass.png")).convert(),
-        1 : pygame.image.load(os.path.join(img_dir, "stone.png")).convert(),
-        2 : pygame.image.load(os.path.join(img_dir, "magma.png")).convert(),
-        3 : pygame.image.load(os.path.join(img_dir, "lava.png")).convert()
+        0: pygame.image.load(os.path.join(img_dir, "grass.png")).convert(),
+        1: pygame.image.load(os.path.join(img_dir, "stone.png")).convert(),
+        2: pygame.image.load(os.path.join(img_dir, "magma.png")).convert(),
+        3: pygame.image.load(os.path.join(img_dir, "lava.png")).convert()
     },
     'widgets': {
         'stamina': pygame.image.load(os.path.join(img_dir, "stamina.png")).convert()
+    }
+}
+
+sounds = {
+    'player': {
+        'jump': pygame.mixer.Sound(os.path.join(sfx_dir, "jump.wav"))
+
     }
 }
 
@@ -271,23 +274,29 @@ stamina = Stamina()
 all_sprites = pygame.sprite.Group(player, stamina)
 blocks = pygame.sprite.Group()
 world_gen()
+keydown = []
 
 while run:
     clock.tick(60)
 
     # Texts in loop
     FpsT = Font.render("FPS : " + str(int(clock.get_fps())), False, WHITE)
+    CoordsT = Font.render("Coords : " + str(player.rect.topleft), False, WHITE)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                run = False
-
+            if not keydown.__contains__(event.key):
+                keydown.append(event.key)
+        if event.type == pygame.KEYUP:
+            if keydown.__contains__(event.key):
+                keydown.remove(event.key)
+    print(keydown)
     screen.fill(HELL_COLOR)
     all_sprites.draw(screen)
     screen.blit(FpsT, (WIDTH - 160, 40))
+    screen.blit(CoordsT, (WIDTH - 160, 80))
     all_sprites.update()
     blocks.update()
     pygame.display.update()
